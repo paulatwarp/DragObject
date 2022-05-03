@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(DragTarget))]
 public class ForceToTarget : MonoBehaviour
 {
     public float P, I, D;
@@ -14,18 +11,17 @@ public class ForceToTarget : MonoBehaviour
 
     void Awake()
     {
-        dragTarget = GetComponent<DragTarget>();
         rigidbody = GetComponent<Rigidbody>();
         target = rigidbody.position;
     }
 
+    public void SetDragTarget(Vector3 position)
+    {
+        target = position;
+    }
+
     void Update()
     {
-        if (dragTarget.grabbed)
-        {
-            target = dragTarget.position;
-        }
-
         Vector3 move = target - rigidbody.position;
         Vector3 force = Vector3.zero;
         Vector3 delta = rigidbody.velocity;

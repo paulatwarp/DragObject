@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,24 +21,27 @@ struct ContactPlane
 }
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(DragTarget))]
 public class TeleportToTarget : MonoBehaviour
 {
-    DragTarget dragTarget;
     new Rigidbody rigidbody;
     List<ContactPlane> contacts = new List<ContactPlane>();
+    Vector3 target;
 
     void Awake()
     {
-        dragTarget = GetComponent<DragTarget>();
         rigidbody = GetComponent<Rigidbody>();
+    }
+
+    public void SetDragTarget(Vector3 position)
+    {
+        target = position;
     }
 
     void FixedUpdate()
     {
-        if (dragTarget.grabbed && Time.deltaTime > 0f)
+        if (Time.deltaTime > 0f)
         {
-            Vector3 move = dragTarget.position - rigidbody.position;
+            Vector3 move = target - rigidbody.position;
             if (move.sqrMagnitude > 0f)
             {
                 foreach (ContactPlane contact in contacts)
