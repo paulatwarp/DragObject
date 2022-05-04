@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,31 +6,66 @@ using UnityEngine;
 
 public struct Motion
 {
-    public float acceleration;
-    public float velocity;
-    public float position;
+    public Vector3 position;
+    public Vector3 velocity;
+    public Vector3 acceleration;
 
-    public float AccelerateToPosition(Motion target, float maxAcceleration, float time)
+    public Motion(Vector3 position, Vector3 velocity, Vector3 acceleration)
     {
-        float Apos = target.position + target.velocity * time + target.acceleration * time * time;
-        float Avel = target.velocity + target.acceleration * time;
-
-        float dPos = Apos - position;
-        float dVel = Avel - velocity;
-        float dAcc = target.acceleration - acceleration;
-        acceleration = dAcc + dVel / time + dPos / time / time;
-
-        // Avel' = Avel + Aacc.t
-        // Apos' = Apos + Avel.t + 1/2.Aacc.t.t
-        // Bpos + Bvel.t + 1/2.Bacc.t.t = Apos'
-        // 
-
-        return acceleration;
+        this.position = position;
+        this.velocity = velocity;
+        this.acceleration = acceleration;
     }
 
-    public float MatchAcceleration(Motion motion, float maxAcceleration, float maxVelocity)
+    internal void Update(Vector3 position, float deltaTime)
     {
-        return 0f;
+        Vector3 velocity = (position - this.position) / deltaTime;
+        acceleration = (velocity - this.velocity) / deltaTime;
+        this.velocity = velocity;
+        this.position = position;
+    }
+
+    public Motion(Motion current, float time)
+    {
+        position = current.position
+                 + current.velocity * time
+                 + 0.5f * current.acceleration * time * time;
+
+        velocity = current.velocity + current.acceleration * time;
+        acceleration = current.acceleration;
+    }
+
+    public Motion Predict(float time)
+    {
+        return new Motion(this, time);
+    }
+
+    Vector3 Square(Vector3 v)
+    {
+        return Vector3.Scale(v, v);
+    }
+
+    float ClosingTime(Motion target, float maximumAcceleration)
+    {
+        Vector3 squareVelocity = Square(velocity) + 2f * (target.position - position) * maximumAcceleration;
+        float time = Mathf.Sqrt(squareVelocity.magnitude) / maximumAcceleration;
+        return time;
+    }
+
+    public Vector3 Acceleration(Motion target, float deltaTime, float maximumAcceleration)
+    {
+        float stoppingTime = ClosingTime(target, maximumAcceleration);
+        if (stoppingTime > 0f)
+        {
+            Motion predicted = new Motion(target, stoppingTime);
+            Vector3 requiredVelocity = (predicted.position - position) / stoppingTime;
+            Vector3 requiredAcceleration = (requiredVelocity - velocity) / stoppingTime;
+            return Vector3.ClampMagnitude(requiredAcceleration, maximumAcceleration);
+        }
+        else
+        {
+            return target.acceleration;
+        }
     }
 }
 

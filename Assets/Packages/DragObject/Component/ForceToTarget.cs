@@ -3,32 +3,36 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class ForceToTarget : MonoBehaviour
 {
-    public float P, I, D;
-    Vector3 integral;
-    DragTarget dragTarget;
-    Vector3 target;
+    public float maximumAcceleration = 1f;
     new Rigidbody rigidbody;
+    Vector3 targetPosition;
+    Motion current;
+    Motion target;
 
     void Awake()
     {
         rigidbody = GetComponent<Rigidbody>();
-        target = rigidbody.position;
+        current = new Motion(rigidbody.position, rigidbody.velocity, Vector3.zero);
     }
 
     public void SetDragTarget(Vector3 position)
     {
-        target = position;
+        targetPosition = position;
+    }
+
+    void FixedUpdate()
+    {
+        current.Update(rigidbody.position, Time.deltaTime);
     }
 
     void Update()
     {
-        Vector3 move = target - rigidbody.position;
-        Vector3 force = Vector3.zero;
-        Vector3 delta = rigidbody.velocity;
-        force.x = (P * move.x) + (I * integral.x) - (D * delta.x);
-        force.y = (P * move.y) + (I * integral.y) - (D * delta.y);
-        force.z = (P * move.z) + (I * integral.z) - (D * delta.z);
-        integral += move * Time.deltaTime;
-        rigidbody.AddForce(force, ForceMode.Force);
+        if (Time.deltaTime > 0f)
+        {
+            target.Update(targetPosition, Time.deltaTime);
+            Vector3 acceleration = current.Acceleration(target, Time.deltaTime, maximumAcceleration);
+            Debug.Log(acceleration);
+            rigidbody.AddForce(acceleration, ForceMode.Acceleration);
+        }
     }
 }
