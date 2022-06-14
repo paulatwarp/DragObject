@@ -15,6 +15,11 @@ public class ForceToTarget : MonoBehaviour
         current = new Motion(rigidbody.position, rigidbody.velocity, Vector3.zero);
     }
 
+    public void SetDragTarget(Transform target)
+    {
+        SetDragTarget(target.position);
+    }
+
     public void SetDragTarget(Vector3 position)
     {
         targetPosition = position;
